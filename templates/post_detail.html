@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load reddit_extra %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block content %}
+    <h1>{{ post.title }}</h1>
+    <div id="post-info">
+        <span>{{ post.created_by.username }}</span>
+        <span>{{ post.pub_date | custom_time}}</span>
+        <span>추천수 : {{ post.vote_sum }}</span>
+    </div>
+    <div id="post-content">
+    <h3>내용 : </h3>
+    {{ post.content | linebreaks }}
+    <br><br>
+    </div>
+    {% if request.user == post.created_by %}
+        <form action="{% url 'reddit:deletePost' post.id %}" method="post">
+            {% csrf_token %}
+            <button type=submit id="delete">삭제하기</button>
+        </form>
+        <a href="{% url 'reddit:editPost' post.id %}">수정하기</a>
+    {% endif %}
+
+    <div id="comments">
+        <h3>댓글 : </h3>
+        {% for comment in post.comments.all %}
+            <div class="comment" value="{{ comment.id }}">
+            {{ comment.content | linebreaks }} - {{ comment.commented_by.username }}, {{ comment.created_at | custom_time}}
+            <button class="add-reply-btn" value="{{ comment.id }}">댓글달기</button>
+            <button class="show-reply-btn">대댓보기</button>
+                <div class="replies hidden">
+                {% for reply in comment.replies.all %}
+                    <div class="comment reply">
+                    ㄴ {{ reply.content | linebreaks }} - {{ reply.commented_by.username }}, {{ reply.created_at | custom_time}}
+                    </div>
+                {% endfor %}
+            </div>
+
+            </div>
+        {% endfor %}
+    </div>
+    <div id="new_comment">
+        <form action="{% url 'reddit:addComment' post.id %}" method="post">
+            {% csrf_token %}
+            {{ comment_form }}
+           <button type="submit">확인</button>
+        </form>
+    </div>
+    <a href="{% url 'reddit:index' %}">돌아가</a>
+{% endblock %}
+
+{% block script %}
+    $('#delete').click(function(e){
+        if(!confirm('삭제?')){
+            e.preventDefault()
+        }
+    });
+    form = ""
+    $(document).ready(
+        function(){
+    {% spaceless %}
+        form = '<form method="post">'
+        +"{% csrf_token %}"
+        +'<input type="hidden" name="redirect" value="'
+        +window.location.href+'">'+'{{ comment_form }}'+'<button type="submit">확인</button></form>';
+    {% endspaceless %}
+    });
+
+    $('.add-reply-btn').click(
+        function(e){
+            console.log($(this).parent().has('.add-reply'));
+            if($(this).parent().has('.add-reply').length != 0){
+                $(this).parent().children().remove('.add-reply');
+            } else {
+                var comment_id = $(this).val();
+                var url = '{% url 'reddit:addReply' 99999 %}'.replace(99999, comment_id);
+
+    //.attr('action':url);
+                $('<div/>', {class:'add-reply'}).append(form).appendTo($(this).parent());
+                $(this).parent().find('form').attr('action',url);
+            }
+        }
+    );
+
+    $('.show-reply-btn').click(
+        function(){
+            console.log('showreply clicked');
+            var replies_div = $(this).parent().find('.replies');
+
+            console.log(replies_div);
+            console.log(replies_div.hasClass('hidden'));
+            if(replies_div.hasClass('hidden')){
+                replies_div.removeClass('hidden');
+            } else {
+                replies_div.addClass('hidden');
+            }
+    });
+
+
+{% endblock %}

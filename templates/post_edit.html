@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}포스트 수정{% endblock %}
+
+{% block content %}
+    <form action="{% url 'reddit:editPost' post.id%}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit">수정하기</button>
+    </form>
+{% endblock %}

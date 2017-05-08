@@ -7,10 +7,10 @@ from django.shortcuts import reverse
 
 
 # Create your models here.
-
 class Post(models.Model):
-    created_by = models.ForeignKey(User, null=True)
+    created_by = models.ForeignKey(User)
     title = models.CharField(max_length=100)
+    content = models.TextField()
     pub_date = models.DateTimeField(auto_now=True)
 
     def _get_vote_sum(self):
@@ -33,6 +33,14 @@ class Post(models.Model):
 
 
 class Vote(models.Model):
-    voted_by = models.ForeignKey(User, null=True)
+    voted_by = models.ForeignKey(User)
     on_post = models.ForeignKey(Post, related_name='votes')
     up = models.BooleanField(default=True)  # False면 down
+
+
+class Comment(models.Model):
+    commented_by = models.ForeignKey(User)
+    on_post = models.ForeignKey(Post, related_name='comments', null=True)
+    reply_to = models.ForeignKey('self', related_name='replies',null=True)
+    content = models.TextField(null=True)
+    created_at = models.DateTimeField(auto_now=True)
