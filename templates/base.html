@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,14 @@
   src="https://code.jquery.com/jquery-3.2.1.min.js"
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
+<script type="text/javascript" src="{% static "angular.min.js"%}"></script>
+      <script type="text/javascript" src="{% static "js/testCtrl.js" %}"></script>
+
     <style>
+        .voted{
+            background-color: cornflowerblue;
+            color: white;
+        }
         .post-wrapper{
             border: 1px solid ghostwhite;
             border-radius: 3px;
@@ -27,7 +35,14 @@
             margin: 0;
         }
 
-        div {
+        a > span{
+            color: black;
+        }
+
+        #content {
+            margin:auto;
+            width: 100%;
+            max-width: 800px;
         }
 
         .comment {
@@ -43,11 +58,34 @@
             display: none;
         }
 
+        .up, .down {
+            padding:3px;
+            border-radius: 3px;
+        }
         .pressed{
             background-color: gray;
         }
 
 
+        .truncate {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .new, .hot{
+            margin-right: 5px;
+        }
+        .new {
+            color:dodgerblue;
+        }
+
+        .hot{
+            color:red;
+        }
+
+        .hide{
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -62,11 +100,11 @@
     {% endif %}
         {% block sidebar %}{% endblock %}
     </div>
-    <div id="content">
+    <div id="content" ng-app="myApp">
         {% block content %}{% endblock %}
     </div>
 </body>
-<script>{% block script %}{% endblock %}
+<script>
 // using jQuery
 function getCookie(name) {
     var cookieValue = null;
@@ -96,6 +134,7 @@ $.ajaxSetup({
         }
     }
 });
+{% block script %}{% endblock %}
 {% if alert %}
         alert('{{ alert }}');
     {% endif %}</script>

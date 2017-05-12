@@ -8,7 +8,7 @@ class PostForm(forms.Form):
 
 
 class CommentForm(forms.Form):
-    content = forms.CharField(required=True, widget=forms.Textarea, label='댓글달기')
+    content = forms.CharField(required=True, widget=forms.Textarea(attrs={'ng-model':'formdata.content'}), label='댓글달기')
 
 
 FAVORITE_COLORS_CHOICES = (

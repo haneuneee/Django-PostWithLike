@@ -6,15 +6,33 @@ from tzlocal import get_localzone
 register = template.Library()
 
 
-@register.filter
-def custom_time(value):
-    time_str_format = '%Y년 %m월 %d일 %H시 %M분'
+def get_time_difference(value):
     value = value.astimezone(get_localzone())
     now = timezone.now().astimezone(get_localzone())
     try:
-        difference = now - value
+        return now - value
     except:
         return value
+
+
+@register.filter
+def check_new(value):
+    difference = get_time_difference(value)
+    if difference <= timedelta(days=1):
+        return True
+    else:
+        return False
+
+@register.filter
+def check_hot(value):
+    if value > 0:
+        return True
+    else:
+        return False
+@register.filter
+def custom_time(value):
+    time_str_format = '%Y년 %m월 %d일 %H시 %M분'
+    difference = get_time_difference(value)
 
     if difference <= timedelta(minutes=1):
         # return value.strftime(time_str_format)
@@ -27,3 +45,13 @@ def custom_time(value):
         return '%(hour)s시간전' % {'hour': difference.seconds // 3600}
     else:
         return value.strftime(time_str_format)
+
+
+@register.filter
+def up_voted_by(obj, user):
+    return obj.up_voted_by(user)
+
+
+@register.filter
+def down_voted_by(obj, user):
+    return obj.down_voted_by(user)

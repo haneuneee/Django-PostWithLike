@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello AngularJS!</title>
+       <script>
+
+    </script>
+  </head>
+  <body ng-app="myApp">
+    <div id="example" ng-controller="myCtrl">
+        <div ng-repeat="c in comment">
+            <my-directive comment="c"></my-directive>
+        </div>
+    </div>
+  </body>
+</html>

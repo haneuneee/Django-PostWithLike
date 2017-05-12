@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 # Create your views here.
+import json
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -23,10 +24,8 @@ def must_be_yours(func):
 
 
 def index(request):
-    print('index')
     posts = Post.objects.all()
     form = TestForm()
-    print('response')
     # for post in posts:
     #     vote = post.votes.filter(voted_by=request.user)
     #     post.voted.up = vote.up
@@ -43,7 +42,6 @@ def addPost(request):
         post.created_by = request.user
         post.save()
         # save
-        print(post.get_absolute_url())
         return redirect(post.get_absolute_url())
     else:
         form = PostForm()
@@ -53,18 +51,27 @@ def addPost(request):
 def detail(request, pk):
     post = Post.objects.get(pk=pk)
     comment_form = CommentForm()
-    return render(request, 'post_detail.html', {'post': post, 'comment_form': comment_form})
+    comment_list = []
+    for comment in post.comments.all():
+        comment_list.append(comment.description())
+    return render(request, 'post_detail.html', {'post': post, 'comment_form': comment_form, 'comment_list':comment_list})
 
 
 @csrf_exempt
 def ratePost(request, pk):
-    vote, create = Vote.objects.update_or_create(
-        voted_by=request.user, on_post=Post.objects.get(pk=pk),
-        defaults={'up': int(request.POST.get('val')) == 1}
-    )
-    vote.save()
-    return HttpResponse('../')
-
+    val = int(request.POST.get('val'))
+    if val == 0:
+        vote, create = Vote.objects.update_or_create(
+            voted_by=request.user, on_post=Post.objects.get(pk=pk)
+        )
+        vote.delete()
+    else:
+        vote, create = Vote.objects.update_or_create(
+            voted_by=request.user, on_post=Post.objects.get(pk=pk),
+            defaults={'up': val == 1}
+        )
+        vote.save()
+    return HttpResponse('success')
 
 @must_be_yours
 def deletePost(request, pk):
@@ -95,14 +102,17 @@ def editPost(request, pk):
 
 def addComment(request, pk):
     if request.method == 'POST':
+        payload = json.loads(request.body)
+        print(payload)
         post = Post.objects.get(pk=pk)
         comment = Comment()
-        print(request.POST.get('content', ''))
-        comment.content = request.POST.get('content', '')
+        comment.content = payload['content']
         comment.on_post = post
         comment.commented_by = request.user
         comment.save()
-        return redirect(post.get_absolute_url())
+
+        return HttpResponse(json.dumps({'message':'succeed'}))
+        #return redirect(post.get_absolute_url())
     else:
         message = '잘못된 접근'
         response = JsonResponse({'status': 'false', 'message': message})
@@ -132,7 +142,8 @@ def addReply(request, pk):
         reply.reply_to = Comment.objects.get(pk=pk)
         reply.save()
         redirect_url = request.POST.get('redirect','')
-        return redirect(redirect_url)
+        return HttpResponse(json.dumps({'message': 'succeed'}))
+        # return redirect(redirect_url)
     else:
         message = '잘못된 접근'
         response = JsonResponse({'status': 'false', 'message': message})

@@ -2,6 +2,12 @@
 {% load reddit_extra %}
 {% block title %}{{ post.title }}{% endblock %}
 {% block content %}
+    <script>window.csrf_token = '{{ csrf_token }}';</script>
+     <div id="example" ng-controller="myCtrl" ng-init="init({{ comment_list }})">
+        <div ng-repeat="c in comments" ng-click="hide(c)">
+            <my-directive comment="c"></my-directive>
+        </div>
+
     <h1>{{ post.title }}</h1>
     <div id="post-info">
         <span>{{ post.created_by.username }}</span>
@@ -40,16 +46,18 @@
         {% endfor %}
     </div>
     <div id="new_comment">
-        <form action="{% url 'reddit:addComment' post.id %}" method="post">
+        <form action="" value="{% url 'reddit:addComment' post.id %}" method="post" ng-submit="submit('{% url 'reddit:addComment' post.id %}')" onsubmit="event.preventDefault(); return false;">
             {% csrf_token %}
             {{ comment_form }}
            <button type="submit">확인</button>
         </form>
     </div>
     <a href="{% url 'reddit:index' %}">돌아가</a>
+     </div>
 {% endblock %}
 
 {% block script %}
+
     $('#delete').click(function(e){
         if(!confirm('삭제?')){
             e.preventDefault()
@@ -74,10 +82,19 @@
             } else {
                 var comment_id = $(this).val();
                 var url = '{% url 'reddit:addReply' 99999 %}'.replace(99999, comment_id);
-
-    //.attr('action':url);
                 $('<div/>', {class:'add-reply'}).append(form).appendTo($(this).parent());
                 $(this).parent().find('form').attr('action',url);
+
+{#    form 리스너 반복#}
+                $('form').submit(function(e){
+                e.preventDefault();
+                console.log($(this).serialize());
+                console.log($(this).attr('value'));
+                $.post($(this).attr('action'), $(this).serialize(), function(data){
+                    console.log(data);
+                });
+        return false;
+    });
             }
         }
     );
@@ -95,6 +112,17 @@
                 replies_div.addClass('hidden');
             }
     });
+
+{#    $('form').submit(function(e){#}
+{#        e.preventDefault();#}
+{#        console.log($(this).serialize());#}
+{#        console.log($(this).attr('value'));#}
+{#        $.post($(this).attr('action'), $(this).serialize(), function(data){#}
+{#            console.log(data);#}
+{#        });#}
+{#    {$ doAngular() $}#}
+{#        return false;#}
+{#    });#}
 
 
 {% endblock %}

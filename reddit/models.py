@@ -31,6 +31,18 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse('reddit:detail', kwargs={'pk': self.pk})
 
+    def up_voted_by(self, user):
+        if self.votes.filter(voted_by=user).exists():
+            return self.votes.filter(voted_by=user)[0].up
+        else:
+            return False
+
+    def down_voted_by(self, user):
+        if self.votes.filter(voted_by=user).exists():
+            return not self.votes.filter(voted_by=user)[0].up
+        else:
+            return False
+
 
 class Vote(models.Model):
     voted_by = models.ForeignKey(User)
@@ -44,3 +56,15 @@ class Comment(models.Model):
     reply_to = models.ForeignKey('self', related_name='replies',null=True)
     content = models.TextField(null=True)
     created_at = models.DateTimeField(auto_now=True)
+
+    def description(self):
+        replies = []
+        for reply in self.replies.all():
+            replies.append(reply.description())
+        return {
+            'id':self.id,
+            'content':self.content,
+            'commented_by': self.commented_by.username,
+            'created_at':self.created_at.strftime("%H:%m"),
+            'replies': replies
+        }

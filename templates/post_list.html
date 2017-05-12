@@ -6,26 +6,54 @@
 <a href="{% url 'reddit:addPost' %}">새글쓰기</a>
     {% for post in posts %}
         <div class="post-wrapper">
-            <a href="{% url 'reddit:detail' pk=post.id %}">추천수 : {{ post.vote_sum }} / 제목 : {{ post.title }} / 작성자 : {{ post.created_by.username }} / 작성시간 : {{ post.pub_date | custom_time }}</a>
+            <a href="{% url 'reddit:detail' pk=post.id %}">
+                <span class="truncate">{{ post.title }} </span>{% if post.pub_date|check_new %}<span class="new">NEW</span>{% endif %}{% if post.vote_sum|check_hot %}<span class="hot">HOT</span>{% endif %}
+            </a>
+            <p>추천수 : {{ post.vote_sum }} / 작성자 : {{ post.created_by.username }} / 작성시간 : {{ post.pub_date|custom_time }}</p>
             <form>
-                <button onclick="up({{ post.id }})">Up</button>
-                <button onclick="down({{ post.id }})">Down</button>
+                <button value="{{ post.id }}" class="up{% if post|up_voted_by:request.user %} voted{% endif %}">Up</button>
+                <button value="{{ post.id }}" class="down{% if post|down_voted_by:request.user %} voted{% endif %}">Down</button>
             </form>
         </div>
     {% endfor %}
 {% endblock %}
 
 {% block script %}
-    function up(pk){
-        {% if request.user.is_authenticated %}
-        $.post('../'+pk+'/rate/', {'val':1});
-        {% else %}
-            alert('x');
-        {% endif %}
+    $('.up').click(
+        function(){
+            pk = $(this).val();
+            if($(this).hasClass('voted')){
+                delete_vote(pk);
+            }
+            else {
+                up_vote(pk);
+            }
+        }
+    );
+    $('.down').click(
+        function(){
+            pk = $(this).val();
+            if($(this).hasClass('voted')){
+                delete_vote(pk);
+            }
+            else {
+                down_vote(pk);
+            }
+        }
+    );
+
+    function up_vote(pk){
+        vote(pk,1);
     }
-    function down(pk){
+    function down_vote(pk){
+        vote(pk,-1);
+    }
+    function delete_vote(pk){
+        vote(pk,0);
+    }
+    function vote(pk,val){
         {% if request.user.is_authenticated %}
-        $.post('../'+pk+'/rate/', {'val':-1});
+        $.post('../'+pk+'/rate/', {'val':val},'json');
         {% else %}
             alert('x');
         {% endif %}
